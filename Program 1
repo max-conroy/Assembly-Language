@@ -1,0 +1,116 @@
+;Description:	Program gets a count, sum, and average of grades entered
+
+INCLUDE Irvine32.inc
+.data
+;Variables
+sum			DWORD 0
+count		DWORD 0
+avg			DWORD 0
+rem			DWORD 0
+
+;buffer declaration
+bufsize		equ 81
+buffer		BYTE bufsize dup(0)
+
+;output statements
+prompt		byte "Enter grade from 0 to 100, then enter -1 to get your calculations",0DH,0AH,0
+totcount	byte "Amount Entered: ",0
+added		byte "Sum: ",0
+avgGrade	byte "Average:  " 
+Blank		byte 0DH,0AH,0
+Percent		byte "%" ,0DH,0AH,0
+Remainder	byte "Remainder: "
+TheEnd		byte "Press 1 to enter more grades or Press 2 to EXIT"
+
+
+.code
+main PROC	
+top:								;top of code for program to re-run
+	mov		sum, 0					;setting variables to have a value of zero
+	mov		count, 0
+	mov		avg, 0
+
+	L1:								;Loop for input of grades
+	mov		edx, OFFSET prompt
+	call	WriteString
+
+	mov		edx, OFFSET buffer		;input of grades
+	mov		ecx, sizeof buffer
+	call	ReadString
+
+	cmp		eax, 0					;Determining if input is zero
+	JZ		L1
+	
+	mov		edx, OFFSET buffer		;string to integer
+	mov		ecx, eax
+	call	ParseInteger32
+
+	cmp		eax, 0					;checks value if they are <= 0 or >= 100 
+	JL		Done
+	cmp		eax, 100
+	JG		Done
+	
+	ADD		sum, eax				;adds the grades together and increments count by plus 1
+	INC		count
+	jmp		L1
+
+
+	Done:
+		mov		edx,OFFSET totcount		;output the total count
+		call	WriteString
+		mov		eax,count
+		call	WriteInt
+		mov		edx,OFFSET Blank
+		call	WriteString
+		
+		mov		edx,OFFSET added		;output the total sum
+		call	WriteString
+		mov		eax, sum
+		call	WriteInt
+	
+		mov		edx,OFFSET Blank
+		call	WriteString
+		
+		cmp		count, 0				;Checks if program is dividing by zero
+		JE		Fin
+
+		mov		eax, sum				;finding average/division
+		mov		edx, 0
+		Idiv	count
+		mov		avg, eax
+		
+		mov		eax, edx				;remainder output
+		mov		rem, edx
+		mov		edx, OFFSET Remainder
+		call	WriteString
+		call	WriteInt
+		mov		edx,OFFSET Blank
+		call	WriteString
+		
+		mov		edx,OFFSET avgGrade		;average output
+		call	WriteString
+		mov		eax, avg
+		call	WriteInt
+		mov		edx,OFFSET Percent
+		call	WriteString
+			
+		mov		edx, OFFSET TheEnd
+		call	WriteString
+		
+		mov		edx, OFFSET buffer		;input of number
+		mov		ecx, sizeof buffer
+		call	ReadString
+		mov		edx, OFFSET buffer		;string to integer
+		mov		ecx, eax
+		call	ParseInteger32
+
+		cmp		eax, 1					;determines if you want continue program
+		JE		top
+		cmp		eax, 2
+		JE		Fin
+
+	fin:		;end program loop
+
+	exit
+main ENDP
+END main
